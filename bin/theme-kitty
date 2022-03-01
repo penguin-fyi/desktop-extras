@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+# theme-kitty
+# Load kitty theme stubs based on current GTK theme
+# using xsetttingsd...
+
+default_theme="Antsy"
+
+# Check for kitty
+[ "$(command -v kitty)" ] || {
+    echo "kitty is not installed!"
+    exit 1
+}
+
+# Check for themes dir
+kitty_themes="${KITTY_THEMES:=/usr/share/penguin/kitty-themes}"
+[ -d "$kitty_themes" ] || {
+    echo "Path does not exist: $kitty_themes"
+    exit 1
+}
+
+# Check for xsettingsd config
+xsd_conf="$XDG_CONFIG_HOME/xsettingsd/xsettingsd.conf"
+[ -f "$xsd_conf" ] || {
+    echo "Unable to load config: $xsd_conf"
+    exit 1
+}
+
+# Get GTK theme
+gtk_theme=$(grep "Net/ThemeName" "$xsd_conf" | awk -F '"' '{print $2}')
+[ -n "$gtk_theme" ] || {
+    echo "Unable to read theme from: $xsd_conf"
+    exit 1
+}
+
+
+# Copy theme to location or use default
+cd "$kitty_themes" || exit 1
+if [ -f "$gtk_theme.conf" ]
+then
+    echo "Setting kitty theme to: $gtk_theme"
+    cp "$gtk_theme.conf" "../theme.conf"
+else
+    echo "Invalid theme '$gtk_theme', using default!"
+    cp "$default_theme.conf" "../theme.conf"
+fi
+
+# Reload kitty config
+killall -SIGUSR1 kitty
+
+exit 0
