@@ -4,45 +4,50 @@
 # Load kitty theme stubs based on current GTK theme
 # using xsetttingsd...
 
+# kitty paths
+kitty_conf="${KITTY_CONF:-$XDG_CONFIG_HOME/kitty/kitty.conf}"
+kitty_theme="${KITTY_THEME:-$XDG_CONFIG_HOME/kitty/theme.conf}"
+kitty_themes_dir="${KITTY_THEMES_DIR:-/usr/share/penguin/kitty-themes}"
+
+# xsettingsd paths
+xsd_conf="$XDG_CONFIG_HOME/xsettingsd/xsettingsd.conf"
+
+# theme stub to use if there is no stub for current GTK theme
 default_theme="Antsy"
 
-# Check for kitty
-[ "$(command -v kitty)" ] || {
-    echo "kitty is not installed!"
-    exit 1
-}
 
-# Check for themes dir
-kitty_themes="${KITTY_THEMES:=/usr/share/penguin/kitty-themes}"
-[ -d "$kitty_themes" ] || {
-    echo "Path does not exist: $kitty_themes"
-    exit 1
-}
+# Check for kitty
+[ "$(command -v kitty)" ] \
+    || { echo "kitty is not installed!"; exit 1; }
+
+[ -f "$kitty_conf" ] \
+    || { echo "$kitty_conf not found!"; exit 1; }
+
+[ -f "$kitty_theme" ] \
+    || { echo "$kitty_theme not found!"; exit 1; }
+
+[ -d "$kitty_themes_dir" ] \
+    || { echo "$kitty_themes_dir not found!"; exit 1; }
 
 # Check for xsettingsd config
-xsd_conf="$XDG_CONFIG_HOME/xsettingsd/xsettingsd.conf"
-[ -f "$xsd_conf" ] || {
-    echo "Unable to load config: $xsd_conf"
-    exit 1
-}
+[ -f "$xsd_conf" ] \
+    || { echo "$xsd_conf not found!"; exit 1; }
 
 # Get GTK theme
 gtk_theme=$(grep "Net/ThemeName" "$xsd_conf" | awk -F '"' '{print $2}')
-[ -n "$gtk_theme" ] || {
-    echo "Unable to read theme from: $xsd_conf"
-    exit 1
-}
+[ -n "$gtk_theme" ] \
+    || { echo "Failed to parse $xsd_conf!"; exit 1; }
 
 
 # Copy theme to location or use default
-cd "$kitty_themes" || exit 1
+cd "$kitty_themes_dir" || exit 1
 if [ -f "$gtk_theme.conf" ]
 then
     echo "Setting kitty theme to: $gtk_theme"
-    cp "$gtk_theme.conf" "../theme.conf"
+    cp "$gtk_theme.conf" "$kitty_theme"
 else
     echo "Invalid theme '$gtk_theme', using default!"
-    cp "$default_theme.conf" "../theme.conf"
+    cp "$default_theme.conf" "$kitty_theme"
 fi
 
 # Reload kitty config
