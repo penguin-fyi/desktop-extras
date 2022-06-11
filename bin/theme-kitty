@@ -13,7 +13,7 @@ kitty_themes_dir="${KITTY_THEMES_DIR:-/usr/share/penguin/kitty-themes}"
 xsd_conf="$XDG_CONFIG_HOME/xsettingsd/xsettingsd.conf"
 
 # theme stub to use if there is no stub for current GTK theme
-default_theme="Antsy"
+default_theme="nGUI"
 
 
 # Check for kitty
